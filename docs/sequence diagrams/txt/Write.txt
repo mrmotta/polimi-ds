@@ -1,0 +1,50 @@
+title Write (5 servers - NW = 4, NR = 3)
+
+participant Client
+participant Server3
+participant Server1
+participant Server4
+participant Server5
+participant Server2
+
+Client->Server3:put(k, v)
+activate Client
+activate Server3
+
+note over Server3:2 phase commit
+
+par
+Server3->Server1:prepare(k, v)
+activate Server1
+Server1-->Server3:voteCommit(k, tsK1)
+note over Server1:ready
+Server3->Server4:prepare(k, v)
+activate Server4
+Server4-->Server3:voteCommit(k, tsK4)
+note over Server4:ready
+Server3->Server5:prepare(k, v)
+activate Server5
+Server5-->Server3:voteCommit(k, tsK5)
+note over Server5:ready
+end
+
+note over Server3:waits for the responses for a while
+
+note over Server3: all responses received
+note over Server3:tsK5 is the max time-stamp
+
+par
+Server3->Server1:globalCommit(k, tsK6)
+Server1-->Server3:ack
+deactivate Server1
+Server3->Server4:globalCommit(k, tsK6)
+Server4-->Server3:ack
+deactivate Server4
+Server3->Server5:globalCommit(k, tsK6)
+Server5-->Server3:ack
+deactivate Server5
+end
+
+Server3-->Client:ack
+deactivate Server3
+deactivate Client

@@ -1,0 +1,38 @@
+title Read (5 servers - NW = 4, NR = 3)
+
+participant Client
+participant Server1
+participant Server2
+participant Server4
+participant Server3
+participant Server5
+
+Client->Server1:get(k)
+activate Client
+activate Server1
+
+par
+Server1->Server2:fetch(k)
+activate Server2
+Server2-->Server1:response2
+deactivate Server2
+Server1->Server4:fetch(k)
+activate Server4
+Server4-->Server1:response4
+deactivate Server4
+end
+
+Server1-->Client:value
+deactivate Client
+
+note over Server1:    read-repair (the value from \nServer2 is the most up-to-date)
+par
+Server1->Server1:repair(k, updatedVal, version)
+Server1->Server4:repair(k, updatedVal, version)
+activate Server4
+Server4->Server4:repair(k, updatedVal, version)
+Server4-->Server1:ack
+deactivate Server4
+end
+
+deactivate Server1
